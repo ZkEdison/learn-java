@@ -1,5 +1,7 @@
 package Day05;
 
+import java.io.RandomAccessFile;
+
 /**
  * 二进制
  * int 32位二进制 4 个字节
@@ -58,13 +60,19 @@ public class BinarySystem {
 
         int n3 = 0x362367de;
         int m3 = 0xff;
-        int b1 = n & m;
-        int b2 = (n >>> 8) & m;
-        int b3 = (n >> 16) & m;
-        int b4 = (n >> 24) & m;
+        int b1 = n3 & m;
+        int b2 = (n3 >>> 8) & m;
+        int b3 = (n3 >> 16) & m;
+        int b4 = (n3 >> 24) & m;
 
+        // 这里为什么不用字节呢?要用int?
 
         // | 或运算  上下兑取按最大的  加法算
         int n4 = (b1 << 24) | (b2 << 16) | (b3 << 8) | b4;
+
+        System.out.println("m3 = " + m3); // 00000000 00000000 000000000 11111111
+        System.out.println("m3 = " + Integer.toBinaryString(256));
+
+//        byte c1 = 0xff;
     }
 }
