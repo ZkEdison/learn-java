@@ -27,7 +27,7 @@ public class Client {
     public Client() throws Exception {
         System.out.println("正在连接服务端");
         // 指定服务端的地址和端口
-        socket = new Socket("localhost", 8088);
+        socket = new Socket("localhost", 8080);
 
         System.out.println("于服务建立联系");
     }
@@ -37,7 +37,9 @@ public class Client {
      */
     public void start() {
         try {
-
+            Scanner scanner = new Scanner(System.in);
+            System.out.println("输入昵称!");
+            String name = scanner.nextLine();
             /**
              * Socket 提供的方法:
              * OutputStream getOutputStream
@@ -53,11 +55,10 @@ public class Client {
             PrintWriter pw = new PrintWriter(osw, true);
 
             /**
-             * 将字符串发送给服务端
+             * 将昵称发送给服务端
              */
-            pw.println("你好服务端");
+            pw.println(name);
 
-            Scanner scanner = new Scanner(System.in);
 
             /**
              * 启动读取服务端发送过来消息的线程

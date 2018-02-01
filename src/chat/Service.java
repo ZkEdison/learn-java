@@ -5,6 +5,8 @@ import java.net.InetAddress;
 import java.net.InterfaceAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 聊天室 服务端
@@ -20,6 +22,11 @@ public class Service {
      */
     private ServerSocket server;
 
+    /**
+     * 保存所有客户端输出流的集合
+     */
+    private List<PrintWriter> allOut;
+
 
     /**
      * 初始化服务端
@@ -28,7 +35,38 @@ public class Service {
         /**
          * 初始化服务端端口
          */
-        server = new ServerSocket(8088);
+        server = new ServerSocket(8080);
+
+        allOut = new ArrayList<PrintWriter>();
+
+    }
+
+
+    /**
+     * 将给定的输出流存入共享集合
+     * @param out
+     */
+    private synchronized void addOut(PrintWriter out) {
+        allOut.add(out);
+    }
+
+    /**
+     * 将给定的输出流从共享集合中删除
+     * @param out
+     */
+    private synchronized void removeOut(PrintWriter out) {
+        allOut.remove(out);
+    }
+
+    /**
+     *将给定的消息 发送给所有客户端
+     */
+
+    private synchronized void sendMessage(String message) {
+        for (PrintWriter out : allOut) {
+            out.println(message);
+
+        }
     }
 
     /**
@@ -82,6 +120,9 @@ public class Service {
         //客户端的地址信息
         private String host;
 
+        //用户昵称
+        private String nickName;
+
         public ClientHandler(Socket socket) {
             this.socket = socket;
             /**
@@ -95,6 +136,7 @@ public class Service {
 
         @Override
         public void run() {
+            PrintWriter pw = null;
             try {
                 /**
                  * Socket 提供的方法
@@ -108,17 +150,28 @@ public class Service {
 
                 BufferedReader br = new BufferedReader(isr);
 
+                //先读昵称
+                nickName = br.readLine();
+                sendMessage(nickName + "上线了!");
+
                 /**
                  * 通过Socket创建输出流用于将消息发送给客户端
                  */
                 OutputStream out = socket.getOutputStream();
                 OutputStreamWriter osw = new OutputStreamWriter(out, "utf-8");
-                PrintWriter pw = new PrintWriter(osw, true);
+                pw = new PrintWriter(osw, true);
+
+
+                /**
+                 * 将该客户端的输出流存入到共享集合中
+                 */
+                addOut(pw);
 
 
                 String message = null;
                 while ((message = br.readLine()) != null) {
-                    pw.println(host + " : " + message);
+                    sendMessage(nickName + ":" + message);
+//                    pw.println(host + " : " + message);
 //                    System.out.println( host + " : " + message);
                 }
             } catch (Exception e) {
@@ -127,7 +180,12 @@ public class Service {
                 /**
                  * 退出循环后 处理当前客户端断开的逻辑
                  */
-                System.out.println( host +  "下线了");
+                // 将该客户端的输出流从共享集合中删除
+                if (pw != null) {
+                    removeOut(pw);
+                    sendMessage(nickName + "下线了");
+
+                }
                 try {
                     socket.close();
                 } catch (IOException e) {
